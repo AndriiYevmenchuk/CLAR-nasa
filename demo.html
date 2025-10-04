@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GeoApp Demo — Map Clusters</title>
+<title>GeoApp — Enschede Map</title>
 
-<!-- Leaflet CSS + JS -->
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- MarkerCluster CSS + JS -->
+<!-- MarkerCluster -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
@@ -57,14 +57,15 @@
   <div id="report">
     <h2 id="reportTitle">Property Report</h2>
     <div class="charts">
-      <canvas id="trafficChart"></canvas>
-      <canvas id="airChart"></canvas>
-      <canvas id="crimeChart"></canvas>
+      <canvas id="chart1"></canvas>
+      <canvas id="chart2"></canvas>
+      <canvas id="chart3"></canvas>
     </div>
   </div>
 
   <aside class="panel">
-    <div class="brand">GeoApp demo — Enschede</div>
+    <div class="brand">GeoApp — Enschede</div>
+
     <div class="section">
       <strong>Search for property</strong>
       <div class="search-bar" style="margin-top:6px;">
@@ -76,15 +77,18 @@
 
     <div class="separator"></div>
     <div class="section">
-      <strong>Show value on map</strong>
+      <strong>Show layer on map</strong>
       <div class="radio-list" style="margin-top:8px;">
         <label><input type="radio" name="metric" value="none" checked> None</label>
-        <label><input type="radio" name="metric" value="traffic"> Traffic</label>
-        <label><input type="radio" name="metric" value="air"> Air quality</label>
-        <label><input type="radio" name="metric" value="crime"> Crime rate</label>
+        <label><input type="radio" name="metric" value="heat"> Urban Heat Islands</label>
+        <label><input type="radio" name="metric" value="flood"> Flood Risk</label>
+        <label><input type="radio" name="metric" value="air"> Air Quality</label>
+        <label><input type="radio" name="metric" value="green"> Greenspace Access</label>
+        <label><input type="radio" name="metric" value="infra"> Access to Critical Infrastructure</label>
+        <label><input type="radio" name="metric" value="crime"> Crime Rate</label>
       </div>
       <div class="legend" id="legend" style="display:none;">
-        <div style="font-weight:600; margin-bottom:6px;">Legend (random values)</div>
+        <div style="font-weight:600; margin-bottom:6px;">Legend (randomized demo values)</div>
         <div class="row"><div class="swatch" style="background:#2b83ba"></div><div>Low</div></div>
         <div class="row"><div class="swatch" style="background:#7fbf7b"></div><div>Medium</div></div>
         <div class="row"><div class="swatch" style="background:#fee08b"></div><div>High</div></div>
@@ -94,23 +98,23 @@
 </div>
 
 <script>
-// Initialize Leaflet map
-const map = L.map('map').setView([52.221537, 6.893661], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19 }).addTo(map);
+// Initialize map
+const map = L.map('map').setView([52.2215, 6.8937], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
 
-// Charts
+// Chart rendering
 let chartInstances = [];
 function renderCharts(){
   chartInstances.forEach(ch => ch.destroy());
   chartInstances = [];
   const labels = ["2019","2020","2021","2022","2023","2024","2025"];
-  function randomData(){ return labels.map(()=> Math.floor(Math.random()*100)); }
-  chartInstances.push(new Chart(document.getElementById('trafficChart'), { type: 'line', data: { labels, datasets:[{label:"Traffic", data:randomData(), borderColor:"blue", fill:false}] } }));
-  chartInstances.push(new Chart(document.getElementById('airChart'), { type: 'line', data: { labels, datasets:[{label:"Air Quality", data:randomData(), borderColor:"green", fill:false}] } }));
-  chartInstances.push(new Chart(document.getElementById('crimeChart'), { type: 'line', data: { labels, datasets:[{label:"Crime Rate", data:randomData(), borderColor:"red", fill:false}] } }));
+  const randomData = () => labels.map(()=> Math.floor(Math.random()*100));
+  chartInstances.push(new Chart(document.getElementById('chart1'), { type:'line', data:{ labels, datasets:[{label:"Urban Heat", data:randomData(), borderColor:"orange"}]} }));
+  chartInstances.push(new Chart(document.getElementById('chart2'), { type:'line', data:{ labels, datasets:[{label:"Flood Risk", data:randomData(), borderColor:"blue"}]} }));
+  chartInstances.push(new Chart(document.getElementById('chart3'), { type:'line', data:{ labels, datasets:[{label:"Crime Rate", data:randomData(), borderColor:"red"}]} }));
 }
 
-// Report view toggle
+// Report toggle
 let reportVisible = false;
 function showReport(name){
   document.getElementById("map").style.display="none";
@@ -126,24 +130,31 @@ function showMap(){
 }
 
 // Property handling
-let currentProperty = null;
+let currentProperty=null;
 function clearProperties(){
-  document.getElementById("propertyList").innerHTML = "";
+  document.getElementById("propertyList").innerHTML="";
   if(currentProperty){ map.removeLayer(currentProperty.marker); currentProperty=null; }
 }
-function addProperty(name, lat, lng){
+function addProperty(name,lat,lng){
   clearProperties();
   const marker = L.marker([lat,lng]).addTo(map).bindPopup(`<b>${name}</b>`);
-  currentProperty = {marker, lat, lng, name};
-  const item = document.createElement("div");
+  currentProperty={marker,lat,lng,name};
+  const item=document.createElement("div");
   item.className="prop-item";
-  item.innerHTML = `<div><div style="font-weight:600">${name}</div></div><div><span class="icon-btn">📊</span></div>`;
+  item.innerHTML=`<div><div style="font-weight:600">${name}</div></div><div><span class="icon-btn">${reportVisible?'🗺️':'📊'}</span></div>`;
   document.getElementById("propertyList").appendChild(item);
-  item.addEventListener("click",()=>{ map.setView([lat,lng],17); marker.openPopup(); if(reportVisible) showMap(); });
-  item.querySelector(".icon-btn").addEventListener("click",(e)=>{ e.stopPropagation(); if(reportVisible) showMap(); else showReport(name); });
+
+  // Open marker or toggle report
+  item.addEventListener("click",()=>{ map.setView([lat,lng],17); marker.openPopup(); });
+  const icon=item.querySelector(".icon-btn");
+  icon.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    if(reportVisible){ showMap(); icon.textContent="📊"; }
+    else{ showReport(name); icon.textContent="🗺️"; }
+  });
 }
 
-// Simple search
+// Search property
 document.getElementById("searchBtn").addEventListener("click", async ()=>{
   const q=document.getElementById("searchInput").value.trim();
   if(!q)return alert("Please enter an address.");
@@ -155,7 +166,7 @@ document.getElementById("searchBtn").addEventListener("click", async ()=>{
   map.setView([parseFloat(loc.lat),parseFloat(loc.lon)],16);
 });
 
-// Metric visualization with clustering
+// Metric layers
 let currentLayerGroup=null;
 function clearMetricLayer(){
   if(currentLayerGroup){ map.removeLayer(currentLayerGroup); currentLayerGroup=null; }
@@ -164,23 +175,23 @@ function clearMetricLayer(){
 function showMetric(metric){
   clearMetricLayer();
   if(metric==="none")return;
-  const markers = L.markerClusterGroup();
-  const center = map.getCenter();
-  const points = generateRandomPoints(center.lat, center.lng, 80, 8);
+  const markers=L.markerClusterGroup();
+  const center=map.getCenter();
+  const points=generateRandomPoints(center.lat,center.lng,100,6);
   points.forEach((pt,idx)=>{
-    const seed = idx*(metric==='traffic'?7:metric==='air'?13:19);
-    const val = pseudoRandomFromSeed(seed)%100;
-    const color = val>66?'#2b83ba':val>33?'#7fbf7b':'#fee08b';
-    const html = `<div style="background:${color};color:#000;font-weight:bold;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #444;">${Math.floor(val)}</div>`;
-    const icon = L.divIcon({html,className:'',iconSize:[30,30]});
-    const marker = L.marker(pt,{icon}).bindPopup(`<b>${metric.toUpperCase()}</b><br>Value: ${val}%`);
+    const seed=idx*(metric.length*7);
+    const val=pseudoRandom(seed)%100;
+    const color=val>66?'#2b83ba':val>33?'#7fbf7b':'#fee08b';
+    const html=`<div style="background:${color};color:#000;font-weight:bold;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #333;">${Math.floor(val)}</div>`;
+    const icon=L.divIcon({html,className:'',iconSize:[30,30]});
+    const marker=L.marker(pt,{icon}).bindPopup(`<b>${metric.toUpperCase()}</b><br>Value: ${val}`);
     markers.addLayer(marker);
   });
   map.addLayer(markers);
   currentLayerGroup=markers;
   document.getElementById('legend').style.display='block';
 }
-function generateRandomPoints(lat,lng,n=40,radiusKm=6){
+function generateRandomPoints(lat,lng,n=60,radiusKm=6){
   const pts=[];
   for(let i=0;i<n;i++){
     const r=Math.sqrt(Math.random())*radiusKm;
@@ -191,7 +202,7 @@ function generateRandomPoints(lat,lng,n=40,radiusKm=6){
   }
   return pts;
 }
-function pseudoRandomFromSeed(seed){
+function pseudoRandom(seed){
   let x=Math.sin(seed+1)*10000;
   return Math.abs(x-Math.floor(x))*1000000%100;
 }
