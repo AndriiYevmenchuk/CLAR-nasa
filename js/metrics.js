@@ -1,5 +1,5 @@
 const metricDescriptions = {
-    none: "No additional layers are shown on the map.",
+    none: "Please select an area of interest.",
     heat: "Urban heat island effect based on land surface temperature data.",
     flood: "Flood risk zones derived from NASA GIBS flood mortality risk distribution.",
     air: "Air quality data combined from NASA GIBS Aerosol Index and WAQI AQI.",
@@ -19,20 +19,25 @@ function handleMetricChange(val) {
     } else if (val === 'flood') {
         showLayer('flood');
     } else if (val === 'air') {
-        showLayer('pollution'); // loads both NASA + WAQI
+        showLayer('pollution');
     } else if (val === 'infra') {
         loadPOIsForMap();
     } else if (val !== 'none') {
         showMetric(val);
     }
-    // Update description text
-    document.getElementById("metricDescription").textContent = metricDescriptions[val] || "";
+    const desc = document.getElementById("metricDescription");
+    if (desc) {
+        desc.textContent = metricDescriptions[val] || "";
+    }
 }
 
 // Attach listener to dropdown
 document.addEventListener("DOMContentLoaded", () => {
     const select = document.getElementById("metricSelect");
     select.addEventListener("change", e => handleMetricChange(e.target.value));
+
+    // Call it once on page load to show default
+    handleMetricChange(select.value);
 });
 
 // Reload POIs on zoom
