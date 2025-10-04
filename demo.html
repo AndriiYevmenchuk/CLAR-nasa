@@ -151,11 +151,25 @@ const gibsFloodRisk = L.tileLayer(
         }
 );
 
+const gibsUrbanExpansion = L.tileLayer(
+        'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Probabilities_of_Urban_Expansion_2000-2030/default/2024-09-01/GoogleMapsCompatible_Level7/{z}/{y}/{x}.png',
+        {
+          attribution: 'NASA GIBS - Aerosol Index',
+          tileSize: 256,
+          minZoom: 2,
+          maxZoom: 18,
+          maxNativeZoom: 6,
+          opacity: 0.7,
+          errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        }
+);
+
 const baseLayers = { "OpenStreetMap": osm };
 const overlayLayers = {
   "Land Surface Temp": gibsLST,
   "Air Pollution (Aerosol)": gibsAirPollution,
-  "Flood risk":gibsFloodRisk
+  "Flood risk":gibsFloodRisk,
+  "Urban expansion":gibsUrbanExpansion,
 };
 L.control.layers(baseLayers, overlayLayers).addTo(map);
 
