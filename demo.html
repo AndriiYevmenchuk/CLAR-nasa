@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GeoApp Demo — Enschede Map</title>
+
+<!-- Leaflet CSS + JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root{ --panel-w: 25vw; }
+  html,body{ height:100%; margin:0; font-family: Arial, sans-serif; background:#f7f7f7; color:#222; }
+  .app { display:flex; height:100vh; }
+
+  #map, #report {
+    width: calc(100% - var(--panel-w));
+    height:100%;
+  }
+  #report { display:none; padding:20px; overflow:auto; background:#fff; }
+
+  .panel { width: var(--panel-w); min-width: 260px; background:#fff; border-left:1px solid #e0e0e0; padding:16px; overflow:auto; box-shadow:-2px 0 6px rgba(0,0,0,0.04); }
+
+  .brand { font-weight:700; font-size:1.1rem; margin-bottom:8px; }
+  .section { margin-bottom: 18px; }
+  .separator { height:1px; background:#eee; margin: 12px 0; }
+
+  .search-bar { display:flex; gap:6px; }
+  .search-bar input { flex:1; padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
+  .btn { padding:8px 10px; background:#006400; color:white; border:none; border-radius:6px; cursor:pointer; }
+  .btn.secondary { background:#444; }
+
+  .prop-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .prop-item { padding:8px 10px; background:#fafafa; border:1px solid #eee; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .prop-item:hover { background:#f0f8ff; }
+
+  .icon-btn { cursor:pointer; font-size:1.2rem; margin-left:8px; user-select:none; }
+
+  .radio-list label{ display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:6px; cursor:pointer; }
+  .radio-list input[type="radio"] { transform:scale(1.05); }
+
+  .legend { margin-top:10px; font-size:0.9rem; }
+  .legend .row{ display:flex; align-items:center; gap:8px; margin:6px 0; }
+  .swatch { width:18px;height:12px;border-radius:3px;border:1px solid #ccc; }
+
+  .charts { display:grid; gap:24px; }
+  canvas { max-width:100%; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Report view -->
+  <div id="report">
+    <h2 id="reportTitle">Property Report</h2>
+    <div class="charts">
+      <canvas id="trafficChart"></canvas>
+      <canvas id="airChart"></canvas>
+      <canvas id="crimeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <aside class="panel">
+    <div class="brand">GeoApp demo — Enschede</div>
+
+    <div class="section">
+      <strong>Search for property</strong>
+      <div class="search-bar" style="margin-top:6px;">
+        <input type="text" id="searchInput" placeholder="Enter address..." />
+        <button class="btn" id="searchBtn">Search</button>
+      </div>
+
+      <div class="prop-list" id="propertyList"></div>
+    </div>
+
+    <div class="separator"></div>
+    <div class="section">
+      <strong>Show value on map</strong>
+      <div class="radio-list" style="margin-top:8px;">
+        <label><input type="radio" name="metric" value="none" checked> None</label>
+        <label><input type="radio" name="metric" value="traffic"> Traffic</label>
+        <label><input type="radio" name="metric" value="air"> Air quality</label>
+        <label><input type="radio" name="metric" value="crime"> Crime rate</label>
+      </div>
+      <div class="legend" id="legend" style="display:none;">
+        <div style="font-weight:600; margin-bottom:6px;">Legend (random values)</div>
+        <div class="row"><div class="swatch" style="background:#2b83ba"></div><div>Low</div></div>
+        <div class="row"><div class="swatch" style="background:#7fbf7b"></div><div>Medium</div></div>
+        <div class="row"><div class="swatch" style="background:#fee08b"></div><div>High</div></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// Initialize Leaflet map
+const center = [52.221537, 6.893661];
+const map = L.map('map').setView(center, 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19 }).addTo(map);
+
+const properties = {};
+let reportVisible = false;
+let chartInstances = [];
+
+// Toggle between report and map
+function showReport(propertyName){
+  document.getElementById("map").style.display = "none";
+  document.getElementById("report").style.display = "block";
+  document.getElementById("reportTitle").innerText = propertyName + " — Report";
+  reportVisible = true;
+  renderCharts();
+}
+function showMap(){
+  document.getElementById("map").style.display = "block";
+  document.getElementById("report").style.display = "none";
+  reportVisible = false;
+}
+
+// Charts
+function renderCharts(){
+  chartInstances.forEach(ch => ch.destroy());
+  chartInstances = [];
+  const labels = ["2019","2020","2021","2022","2023","2024","2025"];
+  function randomData(){ return labels.map(()=> Math.floor(Math.random()*100)); }
+
+  chartInstances.push(new Chart(document.getElementById('trafficChart'), {
+    type: 'line', data: { labels, datasets:[{label:"Traffic", data:randomData(), borderColor:"blue", fill:false}] }
+  }));
+  chartInstances.push(new Chart(document.getElementById('airChart'), {
+    type: 'line', data: { labels, datasets:[{label:"Air Quality", data:randomData(), borderColor:"green", fill:false}] }
+  }));
+  chartInstances.push(new Chart(document.getElementById('crimeChart'), {
+    type: 'line', data: { labels, datasets:[{label:"Crime Rate", data:randomData(), borderColor:"red", fill:false}] }
+  }));
+}
+
+// Add property to list and map
+function addProperty(name, lat, lng){
+  if(properties[name]) return;
+  const marker = L.marker([lat,lng]).addTo(map).bindPopup(`<b>${name}</b>`);
+  properties[name] = {marker, lat, lng};
+
+  const item = document.createElement("div");
+  item.className = "prop-item";
+  item.innerHTML = `
+    <div><div style="font-weight:600">${name}</div></div>
+    <div><span class="icon-btn">📊</span></div>`;
+  document.getElementById("propertyList").appendChild(item);
+
+  item.addEventListener("click", () => {
+    map.setView([lat,lng], 17);
+    marker.openPopup();
+    if (reportVisible) showMap();
+  });
+  item.querySelector(".icon-btn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    if(reportVisible) showMap(); else showReport(name);
+  });
+}
+
+// Search function using Nominatim (English results)
+async function searchAddress(){
+  const q = document.getElementById("searchInput").value.trim();
+  if(!q) return alert("Please enter an address.");
+
+  // Force results to be in English
+  const url = `https://nominatim.openstreetmap.org/search?format=json&accept-language=en&q=${encodeURIComponent(q)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if(data.length === 0){ alert("No results found."); return; }
+  const loc = data[0];
+  const lat = parseFloat(loc.lat), lng = parseFloat(loc.lon);
+
+  // display_name will now be in English (e.g. “Enschede, Overijssel, Netherlands”)
+  addProperty(loc.display_name, lat, lng);
+  map.setView([lat,lng], 16);
+}
+document.getElementById("searchBtn").addEventListener("click", searchAddress);
+document.getElementById("searchInput").addEventListener("keypress", e => { if(e.key==="Enter") searchAddress(); });
+
+// Random metric demo
+let currentLayerGroup = null;
+function clearMetricLayer(){
+  if(currentLayerGroup){ map.removeLayer(currentLayerGroup); currentLayerGroup = null; }
+  document.getElementById('legend').style.display = 'none';
+}
+
+function showMetric(metric){
+  clearMetricLayer();
+  if(metric==="none") return;
+  const group = L.layerGroup();
+
+  const samplePoints = generateRandomPoints(center[0], center[1], 60, 8);
+  samplePoints.forEach((pt, idx) => {
+    const seed = idx * (metric==='traffic'?7: metric==='air'?13:19);
+    const val = pseudoRandomFromSeed(seed) % 100 / 100;
+    const color = val>0.66? '#2b83ba': val>0.33? '#7fbf7b':'#fee08b';
+    const circle = L.circleMarker(pt, {
+      radius: 6+val*18, fillColor: color, color:'#444', weight:0.6,
+      opacity:1, fillOpacity:0.85
+    }).bindPopup(`<b>${metric.toUpperCase()}</b><br>Value: ${(val*100).toFixed(0)}%`);
+    group.addLayer(circle);
+  });
+
+  group.addTo(map);
+  currentLayerGroup = group;
+  document.getElementById('legend').style.display = 'block';
+}
+
+function generateRandomPoints(centerLat, centerLng, n=40, radiusKm=6){
+  const pts = [];
+  for(let i=0;i<n;i++){
+    const r = Math.sqrt(Math.random()) * radiusKm;
+    const angle = Math.random() * Math.PI * 2;
+    const dx = (r * Math.cos(angle)) / 111;
+    const dy = (r * Math.sin(angle)) / (111 * Math.cos(centerLat * Math.PI/180));
+    pts.push([centerLat + dx, centerLng + dy]);
+  }
+  return pts;
+}
+function pseudoRandomFromSeed(seed){
+  let x = Math.sin(seed+1) * 10000;
+  return Math.abs(x - Math.floor(x)) * 1000000 % 100;
+}
+
+document.querySelectorAll('input[name="metric"]').forEach(r => {
+  r.addEventListener('change', e => showMetric(e.target.value));
+});
+</script>
+</body>
+</html>
