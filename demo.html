@@ -7,10 +7,6 @@
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- MarkerCluster -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -45,9 +41,7 @@ canvas { max-width:100%; }
 </head>
 <body>
 <div class="app">
-  <!-- Map -->
   <div id="map"></div>
-  <!-- Report view -->
   <div id="report">
     <h2 id="reportTitle">Property Report</h2>
     <div class="charts">
@@ -56,7 +50,6 @@ canvas { max-width:100%; }
       <canvas id="chart3"></canvas>
     </div>
   </div>
-  <!-- Side panel -->
   <aside class="panel">
     <div class="brand">GeoApp — Enschede</div>
     <div class="section">
@@ -80,7 +73,7 @@ canvas { max-width:100%; }
         <label><input type="radio" name="metric" value="crime"> Crime Rate</label>
       </div>
       <div class="legend" id="legend" style="display:none;">
-        <div style="font-weight:600; margin-bottom:6px;">Legend (randomized demo values)</div>
+        <div style="font-weight:600; margin-bottom:6px;">Legend (demo)</div>
         <div class="row"><div class="swatch" style="background:#2b83ba"></div><div>Low</div></div>
         <div class="row"><div class="swatch" style="background:#7fbf7b"></div><div>Medium</div></div>
         <div class="row"><div class="swatch" style="background:#fee08b"></div><div>High</div></div>
@@ -93,62 +86,25 @@ canvas { max-width:100%; }
 // --- Map Initialization ---
 const center = [52.221537, 6.893661];
 const map = L.map('map').setView(center, 13);
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-const gibsLST = L.tileLayer(
-  'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_Land_Surface_Temp_Day/default/2023-08-15/GoogleMapsCompatible_Level7/{z}/{y}/{x}.png',
-  { attribution: 'NASA GIBS', tileSize: 256, minZoom: 2, maxZoom: 18, maxNativeZoom: 7, opacity: 0.7 }
-);
-const gibsAirPollution = L.tileLayer(
-  'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OMPS_Aerosol_Index/default/2024-09-01/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png',
-  { attribution: 'NASA GIBS - Aerosol Index', tileSize: 256, minZoom: 2, maxZoom: 18, maxNativeZoom: 6, opacity: 0.7 }
-);
-
-const baseLayers = { "OpenStreetMap": osm };
-const overlayLayers = { "Land Surface Temp": gibsLST, "Air Pollution (Aerosol)": gibsAirPollution };
-L.control.layers(baseLayers, overlayLayers).addTo(map);
-
-const allGibsLayers = [gibsLST, gibsAirPollution];
-function showLayer(layerName){
-  allGibsLayers.forEach(l=>{ if(map.hasLayer(l)) map.removeLayer(l); });
-  if(layerName==='temp') map.addLayer(gibsLST);
-  else if(layerName==='pollution') map.addLayer(gibsAirPollution);
-}
-function hideAllLayers(){ allGibsLayers.forEach(l=>{ if(map.hasLayer(l)) map.removeLayer(l); }); }
-
-// --- Charts ---
+// --- Charts & Report ---
 let chartInstances = [];
 function renderCharts(){
-  chartInstances.forEach(ch=>ch.destroy());
-  chartInstances=[];
+  chartInstances.forEach(ch=>ch.destroy()); chartInstances=[];
   const labels=["2019","2020","2021","2022","2023","2024","2025"];
   const randomData=()=>labels.map(()=>Math.floor(Math.random()*100));
   chartInstances.push(new Chart(document.getElementById('chart1'), { type:'line', data:{ labels, datasets:[{label:"Urban Heat", data:randomData(), borderColor:"orange"}]} }));
   chartInstances.push(new Chart(document.getElementById('chart2'), { type:'line', data:{ labels, datasets:[{label:"Flood Risk", data:randomData(), borderColor:"blue"}]} }));
   chartInstances.push(new Chart(document.getElementById('chart3'), { type:'line', data:{ labels, datasets:[{label:"Crime Rate", data:randomData(), borderColor:"red"}]} }));
 }
-
-// --- Report toggle ---
 let reportVisible=false;
-function showReport(name){
-  document.getElementById("map").style.display="none";
-  document.getElementById("report").style.display="block";
-  document.getElementById("reportTitle").innerText=name+" — Report";
-  renderCharts();
-  reportVisible=true;
-}
-function showMap(){
-  document.getElementById("map").style.display="block";
-  document.getElementById("report").style.display="none";
-  reportVisible=false;
-}
+function showReport(name){ document.getElementById("map").style.display="none"; document.getElementById("report").style.display="block"; document.getElementById("reportTitle").innerText=name+" — Report"; renderCharts(); reportVisible=true; }
+function showMap(){ document.getElementById("map").style.display="block"; document.getElementById("report").style.display="none"; reportVisible=false; }
 
 // --- Property handling ---
 let currentProperty=null;
-function clearProperties(){
-  document.getElementById("propertyList").innerHTML="";
-  if(currentProperty){ map.removeLayer(currentProperty.marker); currentProperty=null; }
-}
+function clearProperties(){ document.getElementById("propertyList").innerHTML=""; if(currentProperty){ map.removeLayer(currentProperty.marker); currentProperty=null; } }
 function addProperty(name,lat,lng){
   clearProperties();
   const marker=L.marker([lat,lng]).addTo(map).bindPopup(`<b>${name}</b>`);
@@ -159,89 +115,65 @@ function addProperty(name,lat,lng){
   document.getElementById("propertyList").appendChild(item);
   item.addEventListener("click",()=>{ map.setView([lat,lng],17); marker.openPopup(); });
   const icon=item.querySelector(".icon-btn");
-  icon.addEventListener("click",(e)=>{
-    e.stopPropagation();
-    if(reportVisible){ showMap(); icon.textContent="📊"; }
-    else{ showReport(name); icon.textContent="🗺️"; }
-  });
+  icon.addEventListener("click",(e)=>{ e.stopPropagation(); if(reportVisible){ showMap(); icon.textContent="📊"; } else{ showReport(name); icon.textContent="🗺️"; } });
 }
 
 // --- Overpass Critical Infrastructure ---
-const overpassEndpoint = 'https://overpass-api.de/api/interpreter';
-let poiLayerGroup = null;
+const overpassEndpoint='https://overpass-api.de/api/interpreter';
+let poiLayerGroup = L.layerGroup().addTo(map);
+const minZoomPOI = 16; // show only at zoom >= 16
 
 async function loadPOIsForMap(){
-  if(poiLayerGroup){ map.removeLayer(poiLayerGroup); poiLayerGroup=null; }
-  if(map.getZoom() < 13) return; // only load if zoom >= 13
+  poiLayerGroup.clearLayers();
+  if(map.getZoom()<minZoomPOI) return;
 
-  const bounds = map.getBounds();
-  const bboxStr = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
-  const query = `
-[out:json][timeout:25];
-(
-  node["amenity"="hospital"](${bboxStr});
-  node["amenity"="school"](${bboxStr});
-  node["amenity"="police"](${bboxStr});
-  node["amenity"="fire_station"](${bboxStr});
-  node["amenity"="bus_station"](${bboxStr});
-  node["highway"="bus_stop"](${bboxStr});
-  node["railway"="station"](${bboxStr});
-  node["aeroway"="aerodrome"](${bboxStr});
-  node["aeroway"="airport"](${bboxStr});
-);
-out center;`;
+  const bounds=map.getBounds();
+  const bboxStr=`${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+  const query=`[out:json][timeout:25];(node["amenity"="hospital"](${bboxStr});node["amenity"="school"](${bboxStr});node["amenity"="police"](${bboxStr});node["amenity"="fire_station"](${bboxStr});node["amenity"="bus_station"](${bboxStr});node["highway"="bus_stop"](${bboxStr});node["railway"="station"](${bboxStr});node["aeroway"="aerodrome"](${bboxStr});node["aeroway"="airport"](${bboxStr}););out center;`;
 
   try{
-    const res = await fetch(overpassEndpoint,{ method:'POST', body: query });
-    const osm = await res.json();
-    const markers = L.markerClusterGroup();
+    const res=await fetch(overpassEndpoint,{method:'POST', body:query});
+    const osm=await res.json();
+    const grouped={};
     osm.elements.forEach(f=>{
-      const latlng = [f.lat || f.center?.lat, f.lon || f.center?.lon];
-      if(!latlng[0] || !latlng[1]) return;
-
-      let iconUrl = 'icons/hospital.png';
+      const lat = +(f.lat || f.center?.lat).toFixed(4);
+      const lon = +(f.lon || f.center?.lon).toFixed(4);
       const t = f.tags.amenity || f.tags.highway || f.tags.railway || f.tags.aeroway;
+      if(!lat||!lon) return;
+      const key=`${lat}_${lon}_${t}`;
+      if(!grouped[key]) grouped[key]=f;
+    });
+
+    Object.values(grouped).forEach(f=>{
+      const latlng = [f.lat || f.center?.lat, f.lon || f.center?.lon];
+      let iconUrl='icons/hospital.png';
+      const t=f.tags.amenity||f.tags.highway||f.tags.railway||f.tags.aeroway;
       if(t==='school') iconUrl='icons/school.png';
       else if(t==='police') iconUrl='icons/police.png';
       else if(t==='fire_station') iconUrl='icons/fire-department.png';
-      else if(t==='bus_station' || t==='bus_stop') iconUrl='icons/bus.png';
-      else if(t==='station' || t==='railway') iconUrl='icons/train.png';
-      else if(t==='aeroway' || t==='airport') iconUrl='icons/airport.png';
-
-      const customIcon = L.icon({ iconUrl, iconSize:[32,32], iconAnchor:[16,32] });
-      const marker = L.marker(latlng,{icon:customIcon});
-      const name = f.tags.name || t;
-      marker.bindPopup(`<strong>${name}</strong><br>Type: ${t}`);
-      markers.addLayer(marker);
+      else if(t==='bus_station'||t==='bus_stop') iconUrl='icons/bus.png';
+      else if(t==='station'||t==='railway') iconUrl='icons/train.png';
+      else if(t==='aeroway'||t==='airport') iconUrl='icons/airport.png';
+      const marker=L.marker(latlng, {icon:L.icon({iconUrl, iconSize:[32,32], iconAnchor:[16,32]})});
+      marker.bindPopup(`<strong>${f.tags.name||t}</strong><br>Type: ${t}`);
+      poiLayerGroup.addLayer(marker);
     });
-    poiLayerGroup = markers;
-    map.addLayer(poiLayerGroup);
   }catch(err){ console.error(err); }
 }
 
 // --- Metric selection ---
-function handleMetricChange(val) {
-  clearMetricLayer();
-  hideAllLayers();
-  if(val==='heat') showLayer('temp');
-  else if(val==='flood') showMetric('flood');
-  else if(val==='air') showLayer('pollution');
-  else if(val==='infra') loadPOIsForMap(); // auto load POIs
-  else if(val!=='none') showMetric(val);
-}
-document.querySelectorAll('input[name="metric"]').forEach(r=>{
-  r.addEventListener('change', e => handleMetricChange(e.target.value));
-});
+function handleMetricChange(val){ poiLayerGroup.clearLayers(); if(val==='infra') loadPOIsForMap(); }
+document.querySelectorAll('input[name="metric"]').forEach(r=>{ r.addEventListener('change', e=>handleMetricChange(e.target.value)); });
 
-// Reload POIs on zoom
-map.on('zoomend', () => {
+// --- Reload on zoom or pan ---
+map.on('zoomend moveend', ()=>{
   const selected = document.querySelector('input[name="metric"]:checked').value;
   if(selected==='infra') loadPOIsForMap();
 });
 
 // --- Autocomplete search ---
-const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
+const searchInput=document.getElementById("searchInput");
+const searchBtn=document.getElementById("searchBtn");
 let autocompleteList;
 function createAutocompleteList(){ if(autocompleteList) autocompleteList.remove(); autocompleteList=document.createElement("div"); autocompleteList.className="autocomplete-list"; searchInput.parentElement.appendChild(autocompleteList); }
 async function fetchSuggestions(query){ const url=`https://nominatim.openstreetmap.org/search?format=json&accept-language=en&limit=5&q=${encodeURIComponent(query)}`; const res=await fetch(url); return res.json(); }
