@@ -1,3 +1,15 @@
+const metricDescriptions = {
+    none: "No additional layers are shown on the map.",
+    heat: "Urban heat island effect based on land surface temperature data.",
+    flood: "Flood risk zones derived from NASA GIBS flood mortality risk distribution.",
+    air: "Air quality data combined from NASA GIBS Aerosol Index and WAQI AQI.",
+    green: "Access to greenspace, showing vegetation distribution.",
+    infra: "Points of interest representing critical infrastructure (schools, hospitals, etc.).",
+    crime: "Crime rate data by region (demo values)."
+};
+
+let currentLayerGroup = null;
+
 function handleMetricChange(val) {
     clearMetricLayer();
     hideAllLayers();
@@ -7,18 +19,20 @@ function handleMetricChange(val) {
     } else if (val === 'flood') {
         showLayer('flood');
     } else if (val === 'air') {
-        showLayer('pollution'); // adds BOTH NASA + WAQI
+        showLayer('pollution'); // loads both NASA + WAQI
     } else if (val === 'infra') {
         loadPOIsForMap();
     } else if (val !== 'none') {
-        showMetric(val); // for green, crime, etc.
+        showMetric(val);
     }
+    // Update description text
+    document.getElementById("metricDescription").textContent = metricDescriptions[val] || "";
 }
 
+// Attach listener to dropdown
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('input[name="metric"]').forEach(r => {
-        r.addEventListener('change', e => handleMetricChange(e.target.value));
-    });
+    const select = document.getElementById("metricSelect");
+    select.addEventListener("change", e => handleMetricChange(e.target.value));
 });
 
 // Reload POIs on zoom
@@ -28,19 +42,23 @@ map.on('zoomend', () => {
 });
 
 
-// Metric layers
-let currentLayerGroup=null;
 function clearMetricLayer(){
-    if(currentLayerGroup){ map.removeLayer(currentLayerGroup); currentLayerGroup=null; }
-    document.getElementById('legend').style.display='none';
+    if(currentLayerGroup){
+        map.removeLayer(currentLayerGroup);
+        currentLayerGroup=null;
+    }
+    const legend = document.getElementById('legend');
+    if (legend) legend.style.display='none';
 }
+
 function showMetric(metric){
     clearMetricLayer();
-    if(metric==="none")return;
+    if(metric==="none") return;
+
     const markers=L.markerClusterGroup();
     const center=map.getCenter();
-    const points=generateRandomPoints(center.lat,center.lng,100,6);
-    points.forEach((pt,idx)=>{
+    const points=generateRandomPoints(center.lat, center.lng, 100, 6);
+    points.forEach((pt, idx)=>{
         const seed=idx*(metric.length*7);
         const val=pseudoRandom(seed)%100;
         const color=val>66?'#2b83ba':val>33?'#7fbf7b':'#fee08b';
@@ -51,8 +69,11 @@ function showMetric(metric){
     });
     map.addLayer(markers);
     currentLayerGroup=markers;
-    document.getElementById('legend').style.display='block';
+
+    const legend = document.getElementById('legend');
+    if (legend) legend.style.display='block';
 }
+
 function generateRandomPoints(lat,lng,n=60,radiusKm=6){
     const pts=[];
     for(let i=0;i<n;i++){

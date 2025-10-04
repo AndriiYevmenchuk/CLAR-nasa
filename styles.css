@@ -1,14 +1,39 @@
-:root{ --panel-w: 25vw; }
-html,body{ height:100%; margin:0; font-family: Arial, sans-serif; background:#f7f7f7; color:#222; }
+:root{
+    --panel-w: 25vw;
+}
+html,body{
+    height:100%;
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#89CFF0; color:#222;
+}
 .app { display:flex; height:100vh; }
 #map, #report { width: calc(100% - var(--panel-w)); height:100%; }
 #report { display:none; padding:20px; overflow:auto; background:#fff; }
-.panel { width: var(--panel-w); min-width: 260px; background:#fff; border-left:1px solid #e0e0e0; padding:16px; overflow:auto; box-shadow:-2px 0 6px rgba(0,0,0,0.04); }
+.panel {
+    width: var(--panel-w);
+    min-width: 260px;
+    background:#88d1ff;
+    border-left:1px solid #e0e0e0;
+    padding:16px;
+    overflow:auto;
+    box-shadow:-2px 0 6px rgba(0,0,0,0.04);
+}
 .brand { font-weight:700; font-size:1.1rem; margin-bottom:8px; }
 .section { margin-bottom: 18px; }
 .separator { height:1px; background:#eee; margin: 12px 0; }
-.search-bar { position: relative; }
-.search-bar input { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; }
+.search-bar {
+    display: flex;
+    position: relative;
+    gap: 8px;
+    align-items: center;
+}
+.search-bar input {
+    flex: 1;
+    padding:8px;
+    border:1px solid #ccc;
+    border-radius:4px;
+}
 .btn { margin-top:8px; width:100%; padding:8px 10px; background:#006400; color:white; border:none; border-radius:6px; cursor:pointer; }
 .prop-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
 .prop-item { padding:8px 10px; background:#fafafa; border:1px solid #eee; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
@@ -38,4 +63,39 @@ canvas { max-width:100%; }
     font-weight: 700;
     font-size: 1.1rem;
     margin-bottom: 8px;
+}
+
+#metricSelect {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    appearance: none; /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='10' viewBox='0 0 24 24' width='10' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 30px;
+}
+
+#metricSelect:focus {
+    outline: none;
+    border-color: #0077cc;
+    box-shadow: 0 0 5px rgba(0,119,204,0.5);
+}
+
+#metricDescription {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    font-size: 13px;
+    color: #444;
 }

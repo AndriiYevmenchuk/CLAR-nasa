@@ -52,20 +52,19 @@ For Resilience</span>
         <div class="separator"></div>
         <div class="section">
             <strong>Show layer on map</strong>
-            <div class="radio-list" style="margin-top:8px;">
-                <label><input type="radio" name="metric" value="none" checked> None</label>
-                <label><input type="radio" name="metric" value="heat"> Urban Heat Islands</label>
-                <label><input type="radio" name="metric" value="flood"> Flood Risk</label>
-                <label><input type="radio" name="metric" value="air"> Air Quality</label>
-                <label><input type="radio" name="metric" value="green"> Greenspace Access</label>
-                <label><input type="radio" name="metric" value="infra"> Access to Critical Infrastructure</label>
-                <label><input type="radio" name="metric" value="crime"> Crime Rate</label>
+            <div style="margin-top:8px;">
+                <select id="metricSelect">
+                    <option value="none">None</option>
+                    <option value="heat">Urban Heat Islands</option>
+                    <option value="flood">Flood Risk</option>
+                    <option value="air">Air Quality</option>
+                    <option value="green">Greenspace Access</option>
+                    <option value="infra">Access to Critical Infrastructure</option>
+                    <option value="crime">Crime Rate</option>
+                </select>
             </div>
-            <div class="legend" id="legend" style="display:none;">
-                <div style="font-weight:600; margin-bottom:6px;">Legend (randomized demo values)</div>
-                <div class="row"><div class="swatch" style="background:#2b83ba"></div><div>Low</div></div>
-                <div class="row"><div class="swatch" style="background:#7fbf7b"></div><div>Medium</div></div>
-                <div class="row"><div class="swatch" style="background:#fee08b"></div><div>High</div></div>
+            <div id="metricDescription" style="margin-top:6px; font-size:0.9em; color:#444;">
+                <!-- Text about the selected layer will appear here -->
             </div>
         </div>
     </aside>
