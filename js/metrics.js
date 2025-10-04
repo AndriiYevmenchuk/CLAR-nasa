@@ -1,12 +1,25 @@
 function handleMetricChange(val) {
     clearMetricLayer();
     hideAllLayers();
-    if(val==='heat') showLayer('temp');
-    else if(val==='flood') showMetric('flood');
-    else if(val==='air') showLayer('pollution');
-    else if(val==='infra') loadPOIsForMap(); // auto load POIs
-    else if(val!=='none') showMetric(val);
+
+    if (val === 'heat') {
+        showLayer('temp');
+    } else if (val === 'flood') {
+        showLayer('flood');
+    } else if (val === 'air') {
+        showLayer('pollution'); // adds BOTH NASA + WAQI
+    } else if (val === 'infra') {
+        loadPOIsForMap();
+    } else if (val !== 'none') {
+        showMetric(val); // for green, crime, etc.
+    }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('input[name="metric"]').forEach(r => {
+        r.addEventListener('change', e => handleMetricChange(e.target.value));
+    });
+});
 
 // Reload POIs on zoom
 map.on('zoomend', () => {
@@ -55,25 +68,3 @@ function pseudoRandom(seed){
     let x=Math.sin(seed+1)*10000;
     return Math.abs(x-Math.floor(x))*1000000%100;
 }
-document.querySelectorAll('input[name="metric"]').forEach(r => {
-    r.addEventListener('change', e => {
-        const val = e.target.value;
-        clearMetricLayer();
-        hideAllLayers(); // Now this function exists!
-
-        if (val === 'heat') {
-            showLayer('temp');
-        } else if (val === 'flood') {
-            showMetric('flood');
-        } else if (val === 'air') {
-            showLayer('pollution');
-        } else if (val === 'none') {
-            // All layers already hidden
-        } else {
-            showMetric(val);
-        }
-    });
-});
-document.querySelectorAll('input[name="metric"]').forEach(r=>{
-    r.addEventListener('change', e => handleMetricChange(e.target.value));
-});

@@ -72,10 +72,9 @@ const overlayLayers = {
 };
 L.control.layers(baseLayers, overlayLayers).addTo(map);
 
-const allGibsLayers = [gibsLST, gibsAirPollution, gibsFloodRisk];
-
 function showLayer(layerName) {
-    allGibsLayers.forEach(layer => {
+    // Remove all custom layers before adding new ones
+    [gibsLST, gibsAirPollution, gibsFloodRisk, gibsUrbanExpansion, waqiLayer].forEach(layer => {
         if (map.hasLayer(layer)) {
             map.removeLayer(layer);
         }
@@ -84,14 +83,20 @@ function showLayer(layerName) {
     if (layerName === 'temp') {
         map.addLayer(gibsLST);
     } else if (layerName === 'pollution') {
+        // Add BOTH NASA + WAQI layers together
         map.addLayer(gibsAirPollution);
+        map.addLayer(waqiLayer);
+    } else if (layerName === 'flood') {
+        map.addLayer(gibsFloodRisk);
+    } else if (layerName === 'urban') {
+        map.addLayer(gibsUrbanExpansion);
     }
 }
 
-function hideLayer(layerName) {
-    if (layerName === 'temp' && map.hasLayer(gibsLST)) {
-        map.removeLayer(gibsLST);
-    } else if (layerName === 'pollution' && map.hasLayer(gibsAirPollution)) {
-        map.removeLayer(gibsAirPollution);
-    }
+function hideAllLayers() {
+    [gibsLST, gibsAirPollution, gibsFloodRisk, gibsUrbanExpansion, waqiLayer].forEach(layer => {
+        if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+        }
+    });
 }
