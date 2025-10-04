@@ -26,6 +26,7 @@
   #report { display:none; padding:20px; overflow:auto; background:#fff; }
 
   .panel { width: var(--panel-w); min-width: 260px; background:#fff; border-left:1px solid #e0e0e0; padding:16px; overflow:auto; box-shadow:-2px 0 6px rgba(0,0,0,0.04); }
+
   .brand { font-weight:700; font-size:1.1rem; margin-bottom:8px; }
   .section { margin-bottom: 18px; }
   .separator { height:1px; background:#eee; margin: 12px 0; }
@@ -42,6 +43,8 @@
   .icon-btn { cursor:pointer; font-size:1.2rem; margin-left:8px; user-select:none; }
 
   .radio-list label{ display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:6px; cursor:pointer; }
+  .radio-list input[type="radio"] { transform:scale(1.05); }
+
   .legend { margin-top:10px; font-size:0.9rem; }
   .legend .row{ display:flex; align-items:center; gap:8px; margin:6px 0; }
   .swatch { width:18px;height:12px;border-radius:3px;border:1px solid #ccc; }
@@ -53,7 +56,10 @@
 <body>
 
 <div class="app">
+  <!-- Map -->
   <div id="map"></div>
+
+  <!-- Report view -->
   <div id="report">
     <h2 id="reportTitle">Property Report</h2>
     <div class="charts">
@@ -63,6 +69,7 @@
     </div>
   </div>
 
+  <!-- Side panel -->
   <aside class="panel">
     <div class="brand">GeoApp — Enschede</div>
 
@@ -98,9 +105,45 @@
 </div>
 
 <script>
-// Initialize map
-const map = L.map('map').setView([52.2215, 6.8937], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+// Initialize Leaflet map
+const center = [52.221537, 6.893661];
+const map = L.map('map').setView(center, 5);
+
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+const gibsLST = L.tileLayer(
+        'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_Land_Surface_Temp_Day/default/2023-08-15/GoogleMapsCompatible_Level7/{z}/{y}/{x}.png',
+        {
+          attribution: 'NASA GIBS',
+          tileSize: 256,
+          minZoom: 2,
+          maxZoom: 18,  // Allow zooming to city level
+          maxNativeZoom: 7,  // But tiles only exist up to zoom 7 - Leaflet will upscale
+          opacity: 0.7,
+          errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        }
+);
+
+const gibsAirPollution = L.tileLayer(
+        'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OMPS_Aerosol_Index/default/2024-09-01/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png',
+        {
+          attribution: 'NASA GIBS - Aerosol Index',
+          tileSize: 256,
+          minZoom: 2,
+          maxZoom: 18,
+          maxNativeZoom: 6,
+          opacity: 0.7,
+          errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        }
+);
+
+const baseLayers = { "OpenStreetMap": osm };
+const overlayLayers = {
+  "Land Surface Temp": gibsLST,
+  "Air Pollution (Aerosol)": gibsAirPollution,
+};
+L.control.layers(baseLayers, overlayLayers).addTo(map);
 
 // Chart rendering
 let chartInstances = [];
