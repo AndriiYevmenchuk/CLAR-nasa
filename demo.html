@@ -145,6 +145,43 @@ const overlayLayers = {
 };
 L.control.layers(baseLayers, overlayLayers).addTo(map);
 
+const allGibsLayers = [gibsLST, gibsAirPollution];
+
+function showLayer(layerName) {
+  allGibsLayers.forEach(layer => {
+    if (map.hasLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+
+  if (layerName === 'temp') {
+    map.addLayer(gibsLST);
+  } else if (layerName === 'pollution') {
+    map.addLayer(gibsAirPollution);
+  }
+}
+
+function hideLayer(layerName) {
+  if (layerName === 'temp' && map.hasLayer(gibsLST)) {
+    map.removeLayer(gibsLST);
+  } else if (layerName === 'pollution' && map.hasLayer(gibsAirPollution)) {
+    map.removeLayer(gibsAirPollution);
+  }
+}
+
+function hideAllLayers() {
+  allGibsLayers.forEach(layer => {
+    if (map.hasLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+}
+
+// Make functions globally accessible
+window.showLayer = showLayer;
+window.hideLayer = hideLayer;
+window.hideAllLayers = hideAllLayers;
+
 // Chart rendering
 let chartInstances = [];
 function renderCharts(){
@@ -249,7 +286,25 @@ function pseudoRandom(seed){
   let x=Math.sin(seed+1)*10000;
   return Math.abs(x-Math.floor(x))*1000000%100;
 }
-document.querySelectorAll('input[name="metric"]').forEach(r=>r.addEventListener('change',e=>showMetric(e.target.value)));
+document.querySelectorAll('input[name="metric"]').forEach(r => {
+  r.addEventListener('change', e => {
+    const val = e.target.value;
+    clearMetricLayer();
+    hideAllLayers(); // Now this function exists!
+
+    if (val === 'heat') {
+      showLayer('temp');
+    } else if (val === 'flood') {
+      showMetric('flood');
+    } else if (val === 'air') {
+      showLayer('pollution');
+    } else if (val === 'none') {
+      // All layers already hidden
+    } else {
+      showMetric(val);
+    }
+  });
+});
 </script>
 </body>
 </html>
