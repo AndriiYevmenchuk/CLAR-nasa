@@ -6,6 +6,7 @@
 <title>CLAR — Demo Map</title>
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="config.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <!-- MarkerCluster -->
@@ -121,6 +122,13 @@ const map = L.map('map').setView(center, 5);
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19
 }).addTo(map);
+
+const WAQI_URL = `https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=${MWP_API_KEY}`;
+const waqiLayer = L.tileLayer(WAQI_URL, {
+  attribution: 'Air Quality Tiles &copy; <a href="http://waqi.info">waqi.info</a>',
+  opacity: 0.7
+});
+
 const gibsLST = L.tileLayer(
         'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Aqua_L3_Land_Surface_Temp_8Day_Day/default/2023-08-15/GoogleMapsCompatible_Level7/{z}/{y}/{x}.png',
         {
@@ -179,6 +187,7 @@ const overlayLayers = {
   "Air Pollution (Aerosol)": gibsAirPollution,
   "Flood risk":gibsFloodRisk,
   "Urban expansion":gibsUrbanExpansion,
+  "Air pollution 2":waqiLayer
 };
 L.control.layers(baseLayers, overlayLayers).addTo(map);
 
