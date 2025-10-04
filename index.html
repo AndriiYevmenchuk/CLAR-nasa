@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CLAR — Demo Map</title>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- MarkerCluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="app">
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Report view -->
+    <div id="report">
+        <h2 id="reportTitle">Property Report</h2>
+        <div class="charts">
+            <canvas id="chart1"></canvas>
+            <canvas id="chart2"></canvas>
+            <canvas id="chart3"></canvas>
+        </div>
+    </div>
+
+    <!-- Side panel -->
+    <aside class="panel">
+        <div class="brand">
+            <img src="clar.png" alt="Logo" class="brand-img" />
+            <span>Climate & Land Analysis
+For Resilience</span>
+        </div>
+        <div class="section">
+            <strong>Search for property</strong>
+            <div class="search-bar" style="margin-top:6px;">
+                <input type="text" id="searchInput" placeholder="Enter address..." autocomplete="off" />
+            </div>
+            <button class="btn" id="searchBtn">Search</button>
+            <div class="prop-list" id="propertyList"></div>
+        </div>
+
+        <div class="separator"></div>
+        <div class="section">
+            <strong>Show layer on map</strong>
+            <div class="radio-list" style="margin-top:8px;">
+                <label><input type="radio" name="metric" value="none" checked> None</label>
+                <label><input type="radio" name="metric" value="heat"> Urban Heat Islands</label>
+                <label><input type="radio" name="metric" value="flood"> Flood Risk</label>
+                <label><input type="radio" name="metric" value="air"> Air Quality</label>
+                <label><input type="radio" name="metric" value="green"> Greenspace Access</label>
+                <label><input type="radio" name="metric" value="infra"> Access to Critical Infrastructure</label>
+                <label><input type="radio" name="metric" value="crime"> Crime Rate</label>
+            </div>
+            <div class="legend" id="legend" style="display:none;">
+                <div style="font-weight:600; margin-bottom:6px;">Legend (randomized demo values)</div>
+                <div class="row"><div class="swatch" style="background:#2b83ba"></div><div>Low</div></div>
+                <div class="row"><div class="swatch" style="background:#7fbf7b"></div><div>Medium</div></div>
+                <div class="row"><div class="swatch" style="background:#fee08b"></div><div>High</div></div>
+            </div>
+        </div>
+    </aside>
+</div>
+<script src="config.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
