@@ -12,8 +12,7 @@ challenge. We are aiming to help the urban planners by providing important data 
 ```console 
 git clone https://github.com/AndriiYevmenchuk/CLAR-nasa.git
 ```
-- Add a config.js with the line 
+- Add a config.js with the line with your api key
 ```javascript
 const MWP_API_KEY='<WAQI_API_KEY>'
 ```
-with your api key
