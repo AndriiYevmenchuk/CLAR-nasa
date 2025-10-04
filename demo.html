@@ -51,6 +51,28 @@
 
   .charts { display:grid; gap:24px; }
   canvas { max-width:100%; }
+
+  /* Autocomplete styles */
+  .autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .autocomplete-item {
+    padding: 8px 10px;
+    cursor: pointer;
+  }
+  .autocomplete-item:hover {
+    background: #f0f8ff;
+  }
 </style>
 </head>
 <body>
@@ -109,158 +131,68 @@
 const center = [52.221537, 6.893661];
 const map = L.map('map').setView(center, 5);
 
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
-}).addTo(map);
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 const gibsLST = L.tileLayer(
         'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_Land_Surface_Temp_Day/default/2023-08-15/GoogleMapsCompatible_Level7/{z}/{y}/{x}.png',
-        {
-          attribution: 'NASA GIBS',
-          tileSize: 256,
-          minZoom: 2,
-          maxZoom: 18,  // Allow zooming to city level
-          maxNativeZoom: 7,  // But tiles only exist up to zoom 7 - Leaflet will upscale
-          opacity: 0.7,
-          errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
-        }
+        { attribution: 'NASA GIBS', tileSize: 256, minZoom: 2, maxZoom: 18, maxNativeZoom: 7, opacity: 0.7, errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' }
 );
-
 const gibsAirPollution = L.tileLayer(
         'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OMPS_Aerosol_Index/default/2024-09-01/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png',
-        {
-          attribution: 'NASA GIBS - Aerosol Index',
-          tileSize: 256,
-          minZoom: 2,
-          maxZoom: 18,
-          maxNativeZoom: 6,
-          opacity: 0.7,
-          errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
-        }
+        { attribution: 'NASA GIBS - Aerosol Index', tileSize: 256, minZoom: 2, maxZoom: 18, maxNativeZoom: 6, opacity: 0.7, errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' }
 );
 
 const baseLayers = { "OpenStreetMap": osm };
-const overlayLayers = {
-  "Land Surface Temp": gibsLST,
-  "Air Pollution (Aerosol)": gibsAirPollution,
-};
+const overlayLayers = { "Land Surface Temp": gibsLST, "Air Pollution (Aerosol)": gibsAirPollution };
 L.control.layers(baseLayers, overlayLayers).addTo(map);
-
 const allGibsLayers = [gibsLST, gibsAirPollution];
 
-function showLayer(layerName) {
-  allGibsLayers.forEach(layer => {
-    if (map.hasLayer(layer)) {
-      map.removeLayer(layer);
-    }
-  });
+function showLayer(layerName){ allGibsLayers.forEach(l=>{ if(map.hasLayer(l)) map.removeLayer(l); }); if(layerName==='temp') map.addLayer(gibsLST); else if(layerName==='pollution') map.addLayer(gibsAirPollution); }
+function hideAllLayers(){ allGibsLayers.forEach(l=>{ if(map.hasLayer(l)) map.removeLayer(l); }); }
+window.showLayer = showLayer; window.hideAllLayers = hideAllLayers;
 
-  if (layerName === 'temp') {
-    map.addLayer(gibsLST);
-  } else if (layerName === 'pollution') {
-    map.addLayer(gibsAirPollution);
-  }
-}
-
-function hideLayer(layerName) {
-  if (layerName === 'temp' && map.hasLayer(gibsLST)) {
-    map.removeLayer(gibsLST);
-  } else if (layerName === 'pollution' && map.hasLayer(gibsAirPollution)) {
-    map.removeLayer(gibsAirPollution);
-  }
-}
-
-function hideAllLayers() {
-  allGibsLayers.forEach(layer => {
-    if (map.hasLayer(layer)) {
-      map.removeLayer(layer);
-    }
-  });
-}
-
-// Make functions globally accessible
-window.showLayer = showLayer;
-window.hideLayer = hideLayer;
-window.hideAllLayers = hideAllLayers;
-
-// Chart rendering
+// Charts
 let chartInstances = [];
 function renderCharts(){
-  chartInstances.forEach(ch => ch.destroy());
-  chartInstances = [];
-  const labels = ["2019","2020","2021","2022","2023","2024","2025"];
-  const randomData = () => labels.map(()=> Math.floor(Math.random()*100));
+  chartInstances.forEach(ch=>ch.destroy());
+  chartInstances=[];
+  const labels=["2019","2020","2021","2022","2023","2024","2025"];
+  const randomData=()=>labels.map(()=>Math.floor(Math.random()*100));
   chartInstances.push(new Chart(document.getElementById('chart1'), { type:'line', data:{ labels, datasets:[{label:"Urban Heat", data:randomData(), borderColor:"orange"}]} }));
   chartInstances.push(new Chart(document.getElementById('chart2'), { type:'line', data:{ labels, datasets:[{label:"Flood Risk", data:randomData(), borderColor:"blue"}]} }));
   chartInstances.push(new Chart(document.getElementById('chart3'), { type:'line', data:{ labels, datasets:[{label:"Crime Rate", data:randomData(), borderColor:"red"}]} }));
 }
 
 // Report toggle
-let reportVisible = false;
-function showReport(name){
-  document.getElementById("map").style.display="none";
-  document.getElementById("report").style.display="block";
-  document.getElementById("reportTitle").innerText = name + " — Report";
-  renderCharts();
-  reportVisible = true;
-}
-function showMap(){
-  document.getElementById("map").style.display="block";
-  document.getElementById("report").style.display="none";
-  reportVisible = false;
-}
+let reportVisible=false;
+function showReport(name){ document.getElementById("map").style.display="none"; document.getElementById("report").style.display="block"; document.getElementById("reportTitle").innerText=name+" — Report"; renderCharts(); reportVisible=true; }
+function showMap(){ document.getElementById("map").style.display="block"; document.getElementById("report").style.display="none"; reportVisible=false; }
 
 // Property handling
 let currentProperty=null;
-function clearProperties(){
-  document.getElementById("propertyList").innerHTML="";
-  if(currentProperty){ map.removeLayer(currentProperty.marker); currentProperty=null; }
-}
+function clearProperties(){ document.getElementById("propertyList").innerHTML=""; if(currentProperty){ map.removeLayer(currentProperty.marker); currentProperty=null; } }
 function addProperty(name,lat,lng){
   clearProperties();
-  const marker = L.marker([lat,lng]).addTo(map).bindPopup(`<b>${name}</b>`);
+  const marker=L.marker([lat,lng]).addTo(map).bindPopup(`<b>${name}</b>`);
   currentProperty={marker,lat,lng,name};
   const item=document.createElement("div");
   item.className="prop-item";
   item.innerHTML=`<div><div style="font-weight:600">${name}</div></div><div><span class="icon-btn">${reportVisible?'🗺️':'📊'}</span></div>`;
   document.getElementById("propertyList").appendChild(item);
-
-  // Open marker or toggle report
   item.addEventListener("click",()=>{ map.setView([lat,lng],17); marker.openPopup(); });
   const icon=item.querySelector(".icon-btn");
-  icon.addEventListener("click",(e)=>{
-    e.stopPropagation();
-    if(reportVisible){ showMap(); icon.textContent="📊"; }
-    else{ showReport(name); icon.textContent="🗺️"; }
-  });
+  icon.addEventListener("click",(e)=>{ e.stopPropagation(); if(reportVisible){ showMap(); icon.textContent="📊"; } else{ showReport(name); icon.textContent="🗺️"; } });
 }
-
-// Search property
-document.getElementById("searchBtn").addEventListener("click", async ()=>{
-  const q=document.getElementById("searchInput").value.trim();
-  if(!q)return alert("Please enter an address.");
-  const url=`https://nominatim.openstreetmap.org/search?format=json&accept-language=en&limit=1&q=${encodeURIComponent(q)}`;
-  const res=await fetch(url); const data=await res.json();
-  if(!data.length)return alert("No results found.");
-  const loc=data[0];
-  addProperty(loc.display_name,parseFloat(loc.lat),parseFloat(loc.lon));
-  map.setView([parseFloat(loc.lat),parseFloat(loc.lon)],16);
-});
 
 // Metric layers
 let currentLayerGroup=null;
-function clearMetricLayer(){
-  if(currentLayerGroup){ map.removeLayer(currentLayerGroup); currentLayerGroup=null; }
-  document.getElementById('legend').style.display='none';
-}
+function clearMetricLayer(){ if(currentLayerGroup){ map.removeLayer(currentLayerGroup); currentLayerGroup=null; } document.getElementById('legend').style.display='none'; }
 function showMetric(metric){
   clearMetricLayer();
-  if(metric==="none")return;
   const markers=L.markerClusterGroup();
   const center=map.getCenter();
   const points=generateRandomPoints(center.lat,center.lng,100,6);
   points.forEach((pt,idx)=>{
-    const seed=idx*(metric.length*7);
-    const val=pseudoRandom(seed)%100;
+    const seed=idx*(metric.length*7); const val=pseudoRandom(seed)%100;
     const color=val>66?'#2b83ba':val>33?'#7fbf7b':'#fee08b';
     const html=`<div style="background:${color};color:#000;font-weight:bold;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #333;">${Math.floor(val)}</div>`;
     const icon=L.divIcon({html,className:'',iconSize:[30,30]});
@@ -282,28 +214,44 @@ function generateRandomPoints(lat,lng,n=60,radiusKm=6){
   }
   return pts;
 }
-function pseudoRandom(seed){
-  let x=Math.sin(seed+1)*10000;
-  return Math.abs(x-Math.floor(x))*1000000%100;
-}
-document.querySelectorAll('input[name="metric"]').forEach(r => {
-  r.addEventListener('change', e => {
-    const val = e.target.value;
-    clearMetricLayer();
-    hideAllLayers(); // Now this function exists!
+function pseudoRandom(seed){ let x=Math.sin(seed+1)*10000; return Math.abs(x-Math.floor(x))*1000000%100; }
 
-    if (val === 'heat') {
-      showLayer('temp');
-    } else if (val === 'flood') {
-      showMetric('flood');
-    } else if (val === 'air') {
-      showLayer('pollution');
-    } else if (val === 'none') {
-      // All layers already hidden
-    } else {
-      showMetric(val);
-    }
+document.querySelectorAll('input[name="metric"]').forEach(r=>{ r.addEventListener('change',e=>{
+  const val=e.target.value; clearMetricLayer(); hideAllLayers();
+  if(val==='heat'){ showLayer('temp'); } else if(val==='flood'){ showMetric('flood'); } else if(val==='air'){ showLayer('pollution'); } else if(val!=='none'){ showMetric(val); }
+})});
+
+// Autocomplete search
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+let autocompleteList;
+
+function createAutocompleteList(){ if(autocompleteList) autocompleteList.remove(); autocompleteList=document.createElement("div"); autocompleteList.className="autocomplete-list"; searchInput.parentElement.appendChild(autocompleteList); }
+async function fetchSuggestions(query){ const url=`https://nominatim.openstreetmap.org/search?format=json&accept-language=en&limit=5&q=${encodeURIComponent(query)}`; const res=await fetch(url); return res.json(); }
+function showSuggestions(suggestions){
+  createAutocompleteList();
+  if(!suggestions.length){ autocompleteList.innerHTML=`<div class="autocomplete-item" style="color:#888;">No results</div>`; return; }
+  suggestions.forEach(item=>{
+    const div=document.createElement("div"); div.className="autocomplete-item"; div.textContent=item.display_name;
+    div.addEventListener("click",()=>{ autocompleteList.innerHTML=""; searchInput.value=item.display_name; addProperty(item.display_name,parseFloat(item.lat),parseFloat(item.lon)); map.setView([parseFloat(item.lat),parseFloat(item.lon)],16); });
+    autocompleteList.appendChild(div);
   });
+}
+
+let typingTimer;
+searchInput.addEventListener("input",()=>{
+  const q=searchInput.value.trim(); if(q.length<3){ if(autocompleteList) autocompleteList.innerHTML=""; return; }
+  clearTimeout(typingTimer); typingTimer=setTimeout(async()=>{ const results=await fetchSuggestions(q); showSuggestions(results); },300);
+});
+
+document.addEventListener("click",(e)=>{ if(!searchInput.contains(e.target) && !autocompleteList?.contains(e.target)) if(autocompleteList) autocompleteList.innerHTML=""; });
+
+searchBtn.addEventListener("click",async()=>{
+  const q=searchInput.value.trim(); if(!q) return alert("Please enter an address.");
+  const url=`https://nominatim.openstreetmap.org/search?format=json&accept-language=en&limit=1&q=${encodeURIComponent(q)}`;
+  const res=await fetch(url); const data=await res.json();
+  if(!data.length) return alert("No results found.");
+  const loc=data[0]; addProperty(loc.display_name,parseFloat(loc.lat),parseFloat(loc.lon)); map.setView([parseFloat(loc.lat),parseFloat(loc.lon)],16);
 });
 </script>
 </body>
