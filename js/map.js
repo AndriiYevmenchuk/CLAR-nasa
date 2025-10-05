@@ -70,7 +70,6 @@ const overlayLayers = {
     "Urban expansion":gibsUrbanExpansion,
     "Air pollution 2":waqiLayer
 };
-L.control.layers(baseLayers, overlayLayers).addTo(map);
 
 function showLayer(layerName) {
     // Remove all custom layers before adding new ones
