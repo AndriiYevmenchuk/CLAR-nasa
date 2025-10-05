@@ -1,4 +1,5 @@
-# CLAR
+<h1 style="display: inline-block;">CLAR</h1>
+<img src="https://example.com/image.png" alt="My Image" style="width:50px; vertical-align: middle;">
 NASA space apps hackathon submission in the Data Pathways to Healthy Cities and Human Settlements 
 challenge. We are aiming to help the urban planners by providing important data for decision making.
 
