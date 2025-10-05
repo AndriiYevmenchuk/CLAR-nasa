@@ -100,3 +100,31 @@ function hideAllLayers() {
         }
     });
 }
+
+map.on('moveend', () => {
+  loadPOIsForMap();
+});
+
+map.on('zoomend', () => {
+  loadPOIsForMap();
+});
+
+document.getElementById('metricSelect').addEventListener('change', () => {
+  if (poiLayerGroup) {
+    map.removeLayer(poiLayerGroup);
+    poiLayerGroup = L.layerGroup();
+  }
+  fetchedTiles.clear();
+  loadPOIsForMap();
+});
+
+function isCityView() {
+    const bounds = map.getBounds();
+    const latDiff = bounds.getNorth() - bounds.getSouth();
+    const lngDiff = bounds.getEast() - bounds.getWest();
+
+    // Example: only fetch if view is < ~0.3° lat/lng (roughly city size)
+    return latDiff < 0.3 && lngDiff < 0.3;
+}
+
+
