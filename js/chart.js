@@ -3,6 +3,61 @@ let tempChartInstance = null;
 let precipChartInstance = null;
 let windChartInstance = null;
 
+async function loadSoilType(lat, lon) {
+    try {
+        const username = METEO_API_USERNAME;
+        const password = METEO_API_PASSWORD;
+        const url = `https://api.meteomatics.com/now/soil_type:idx/${lat},${lon}/json`;
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+            }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        const soilTypeIdx = data.data[0].coordinates[0].dates[0].value;
+
+        // Map index to soil type description
+        const soilTypes = {
+            0: "Ocean/Lake",
+            1: "Coarse",
+            2: "Medium",
+            3: "Medium Fine",
+            4: "Fine",
+            5: "Very Fine",
+            6: "Organic",
+            7: "Tropical Organic"
+        };
+
+        const soilType = soilTypes[soilTypeIdx] || `Unknown (${soilTypeIdx})`;
+
+        const reportDiv = document.getElementById('report');
+        if (reportDiv) {
+            let soilDiv = document.getElementById('soilInfo');
+            if (!soilDiv) {
+                soilDiv = document.createElement('div');
+                soilDiv.id = 'soilInfo';
+                soilDiv.style.marginBottom = '10px';
+                reportDiv.insertBefore(soilDiv, reportDiv.querySelector('.charts'));
+            }
+            soilDiv.innerHTML = `<strong>Soil Type:</strong> ${soilType}`;
+        }
+
+        console.log("Soil type loaded:", soilType);
+        return { index: soilTypeIdx, type: soilType };
+
+    } catch (error) {
+        console.error("Error fetching soil type:", error);
+        return null;
+    }
+}
+
+// Make function globally accessible
+window.loadSoilType = loadSoilType;
+
 function aggregateMonthly(weatherData) {
     const monthly = {};
 

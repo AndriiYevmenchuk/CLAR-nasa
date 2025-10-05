@@ -7,6 +7,7 @@ challenge. We are aiming to help the urban planners by providing important data 
 - Openstreet map to get the closest critical infrasctructure - https://www.openstreetmap.org/#map=7/52.154/5.295
 - Waqi - world map real time air quality index - https://waqi.info
 - OpenMeteo - for the historical weather data https://open-meteo.com
+- MeteoMatics - for the soil type - https://www.meteomatics.com/en/api/available-parameters/soil-parameters/
 
 ## To run the project
 - Clone the repo with 
@@ -16,4 +17,6 @@ git clone https://github.com/AndriiYevmenchuk/CLAR-nasa.git
 - Add a config.js with the line with your api key
 ```javascript
 const MWP_API_KEY='<WAQI_API_KEY>'
+const METEO_API_USERNAME='<METEO_API_USERNAME>'
+const METEO_API_PASSWORD='<METEO_API_PASSWORD>'
 ```

@@ -49,6 +49,7 @@ function addProperty(name,lat,lng){
     });
 
     loadWeatherData(lat, lng);
+    loadSoilType(lat, lng);
 }
 
 searchInput.addEventListener("input",()=>{
