@@ -48,8 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Reload POIs on zoom
 map.on('zoomend', () => {
-    const selected = document.querySelector('input[name="metric"]:checked').value;
-    if(selected==='infra') loadPOIsForMap();
+    const select = document.getElementById("metricSelect");
+    if(select && select.value === 'infra') loadPOIsForMap();
 });
 
 

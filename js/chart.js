@@ -1,96 +1,165 @@
+// Global chart instances to allow cleanup
+let tempChartInstance = null;
+let precipChartInstance = null;
+let windChartInstance = null;
+
 async function loadWeatherData(lat, lon) {
-    const params = {
+    const params = new URLSearchParams({
         latitude: lat,
         longitude: lon,
         start_date: "2020-01-01",
         end_date: "2020-01-07",
-        hourly: ["temperature_2m", "precipitation", "windspeed_10m"],
-    };
+        hourly: "temperature_2m,precipitation,windspeed_10m"
+    });
 
-    const url = "https://archive-api.open-meteo.com/v1/archive";
-    const responses = await window.fetchWeatherApi(url, params);
-    const response = responses[0];
+    const url = `https://archive-api.open-meteo.com/v1/archive?${params}`;
 
-    const utcOffsetSeconds = response.utcOffsetSeconds();
-    const hourly = response.hourly();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    const time = [...Array((Number(hourly.timeEnd()) - Number(hourly.time())) / hourly.interval())].map(
-        (_, i) => new Date((Number(hourly.time()) + i * hourly.interval() + utcOffsetSeconds) * 1000)
-    );
+        const weatherData = {
+            time: data.hourly.time.map(t => {
+                const date = new Date(t);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' });
+            }),
+            temperature: data.hourly.temperature_2m,
+            precipitation: data.hourly.precipitation,
+            windspeed: data.hourly.windspeed_10m
+        };
 
-    const weatherData = {
-        time,
-        temperature: hourly.variables(0).valuesArray(),
-        precipitation: hourly.variables(1).valuesArray(),
-        windspeed: hourly.variables(2).valuesArray()
-    };
-
-    renderWeatherCharts(weatherData);
+        console.log("Weather data loaded successfully");
+        renderWeatherCharts(weatherData);
+    } catch (error) {
+        console.error("Error fetching weather data:", error);
+    }
 }
 
+function renderWeatherCharts(weatherData) {
+    // Destroy existing charts if they exist
+    if (tempChartInstance) tempChartInstance.destroy();
+    if (precipChartInstance) precipChartInstance.destroy();
+    if (windChartInstance) windChartInstance.destroy();
 
-function renderWeatherCharts(data) {
-    // Temperature chart
-    new Chart(document.getElementById("tempChart").getContext("2d"), {
-        type: "line",
-        data: {
-            labels: data.time,
-            datasets: [{
-                label: "Temperature (°C)",
-                data: data.temperature,
-                borderColor: "red",
-                backgroundColor: "rgba(255,0,0,0.1)",
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { type: "time", time: { unit: "day" } },
-                y: { title: { display: true, text: "°C" } }
+    // Temperature Chart
+    const tempCtx = document.getElementById("tempChart");
+    if (tempCtx) {
+        tempChartInstance = new Chart(tempCtx, {
+            type: "line",
+            data: {
+                labels: weatherData.time,
+                datasets: [{
+                    label: "Temperature (°C)",
+                    data: weatherData.temperature,
+                    borderColor: "rgb(255, 99, 132)",
+                    backgroundColor: "rgba(255, 99, 132, 0.1)",
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (Jan 2020)'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
             }
-        }
-    });
+        });
+    }
 
-    // Precipitation chart
-    new Chart(document.getElementById("precipChart").getContext("2d"), {
-        type: "bar",
-        data: {
-            labels: data.time,
-            datasets: [{
-                label: "Precipitation (mm)",
-                data: data.precipitation,
-                backgroundColor: "rgba(0,0,255,0.5)"
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { type: "time", time: { unit: "day" } },
-                y: { title: { display: true, text: "mm" } }
+    // Precipitation Chart
+    const precipCtx = document.getElementById("precipChart");
+    if (precipCtx) {
+        precipChartInstance = new Chart(precipCtx, {
+            type: "bar",
+            data: {
+                labels: weatherData.time,
+                datasets: [{
+                    label: "Precipitation (mm)",
+                    data: weatherData.precipitation,
+                    backgroundColor: "rgba(54, 162, 235, 0.7)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Precipitation (Jan 2020)'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
             }
-        }
-    });
+        });
+    }
 
-    // Wind speed chart
-    new Chart(document.getElementById("windChart").getContext("2d"), {
-        type: "line",
-        data: {
-            labels: data.time,
-            datasets: [{
-                label: "Wind Speed (m/s)",
-                data: data.windspeed,
-                borderColor: "green",
-                backgroundColor: "rgba(0,128,0,0.1)",
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { type: "time", time: { unit: "day" } },
-                y: { title: { display: true, text: "m/s" } }
+    // Wind Speed Chart
+    const windCtx = document.getElementById("windChart");
+    if (windCtx) {
+        windChartInstance = new Chart(windCtx, {
+            type: "line",
+            data: {
+                labels: weatherData.time,
+                datasets: [{
+                    label: "Wind Speed (m/s)",
+                    data: weatherData.windspeed,
+                    borderColor: "rgb(75, 192, 192)",
+                    backgroundColor: "rgba(75, 192, 192, 0.1)",
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Wind Speed (Jan 2020)'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
             }
-        }
-    });
+        });
+    }
 }
+
+// Make functions globally accessible
+window.loadWeatherData = loadWeatherData;
+window.renderWeatherCharts = renderWeatherCharts;
+// Legacy alias for compatibility
+window.renderCharts = renderWeatherCharts;
