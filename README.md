@@ -1,4 +1,4 @@
-<div>
+<div style="display: flex; align-items: center;">
 <h1 style="display: inline-block;">CLAR</h1>
 <img src="assets/clar.png" alt="My Image" style="width:50px; vertical-align: middle;">
 </div>
