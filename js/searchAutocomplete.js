@@ -30,7 +30,7 @@ function clearProperties(){
     document.getElementById("propertyList").innerHTML="";
     if(currentProperty){ map.removeLayer(currentProperty.marker); currentProperty=null; }
 }
-function addProperty(name,lat,lng){
+async function addProperty(name,lat,lng){
     clearProperties();
     const marker = L.marker([lat,lng]).addTo(map).bindPopup(`<b>${name}</b>`);
     currentProperty={marker,lat,lng,name};
@@ -47,6 +47,8 @@ function addProperty(name,lat,lng){
         if(reportVisible){ showMap(); icon.textContent="📊"; }
         else{ showReport(name); icon.textContent="🗺️"; }
     });
+
+    loadWeatherData(lat, lng);
 }
 
 searchInput.addEventListener("input",()=>{

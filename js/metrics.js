@@ -1,11 +1,17 @@
 const metricDescriptions = {
     none: "Please select an area of interest.",
-    heat: "Urban heat island effect based on land surface temperature data.",
-    flood: "Flood risk zones derived from NASA GIBS flood mortality risk distribution.",
-    air: "Air quality data combined from NASA GIBS Aerosol Index and WAQI AQI.",
-    green: "Access to greenspace, showing vegetation distribution.",
-    infra: "Points of interest representing critical infrastructure (schools, hospitals, etc.).",
-    crime: "Crime rate data by region (demo values)."
+
+    heat: "Urban Heat Islands (UHI) show areas where the land surface temperature is higher than surrounding regions. This data is derived from NASA MODIS Land Surface Temperature datasets. Understanding UHI is critical for urban planners to design cooling strategies, increase greenspace, and reduce heat-related health risks for residents.",
+
+    flood: "Flood Risk zones are based on NASA GIBS Flood Mortality Risk Distribution datasets. These maps indicate areas prone to flooding due to historical rainfall patterns and terrain. Urban planners use this information to develop flood mitigation strategies, guide infrastructure placement, and protect vulnerable populations.",
+
+    air: "Air Quality combines data from NASA GIBS Aerosol Index and WAQI (World Air Quality Index) real-time observations. It highlights areas with high particulate matter and pollutants. This information helps urban planners identify pollution hotspots, plan green buffers, and implement policies to improve public health and reduce respiratory diseases.",
+
+    green: "Greenspace Access is derived from satellite vegetation indexes and land cover data. It shows the distribution of parks, trees, and green areas within urban regions. Planners use this metric to ensure equitable access to greenspace, enhance urban biodiversity, and improve mental and physical well-being of residents.",
+
+    infra: "Critical Infrastructure Points of Interest include hospitals, schools, fire stations, and other essential services mapped from OpenStreetMap and local databases. Urban planners leverage this information to assess accessibility, optimize service coverage, and improve community resilience during emergencies.",
+
+    crime: "Crime Rate data, sourced from regional police reports and open datasets, shows the spatial distribution of reported incidents. Urban planners and safety officers use this data to inform zoning, improve lighting and surveillance, and design safer public spaces."
 };
 
 let currentLayerGroup = null;
